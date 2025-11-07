@@ -6,15 +6,22 @@ const ALL_ITEMS = [
   { id: 2, name: "루비소드", type: "weapon", rarity: "rare", img: "/루비소드_희귀.png", dropRate: 0.15 },
   { id: 3, name: "파멸의 검", type: "weapon", rarity: "epic", img: "/파멸의검_에픽.png", dropRate: 0.05 },
   { id: 4, name: "아스가르드의 빛", type: "weapon", rarity: "legendary", img: "/아스가르드의빛_전설.png", dropRate: 0.01 },
-  // (투구, 갑옷, 장갑 등은 원하는 대로 추가!)
+  // 투구
+  { id: 5, name: "녹슨 철 투구", type: "helmet", rarity: "common", img: "/녹슨 철 투구.png", dropRate: 0.5 },
+  { id: 6, name: "용기의 투구", type: "helmet", rarity: "rare", img: "/용기의 투구.png", dropRate: 0.15 },
+  { id: 7, name: "검은 달의 투구", type: "helmet", rarity: "epic", img: "/검은 달의 투구.png", dropRate: 0.05 },
+  { id: 8, name: "신왕의 면류관", type: "helmet", rarity: "legendary", img: "/신왕의 면류관.png", dropRate: 0.01 },
+  // 갑옷
+  { id: 9, name: "낡은 철 갑옷", type: "armor", rarity: "common", img: "/낡은 철 갑옷.png", dropRate: 0.5 },
+  { id: 10, name: "기사단 정예 갑주", type: "armor", rarity: "rare", img: "/기사단 정예 갑주.png", dropRate: 0.15 },
+  { id: 11, name: "피의 결의 갑옷", type: "armor", rarity: "epic", img: "/피의 결의 갑옷.png", dropRate: 0.05 },
+  { id: 12, name: "용왕의 판금갑주", type: "armor", rarity: "legendary", img: "/용왕의 판금갑주.png", dropRate: 0.01 },
 ];
 
-// 장비 부위 정의
 const SLOT_LIST = [
   { key: "weapon", label: "무기" },
-  // { key: "helmet", label: "투구" },
-  // { key: "armor", label: "갑옷" },
-  // 필요한 부위 추가!
+  { key: "helmet", label: "투구" },
+  { key: "armor", label: "갑옷" },
 ];
 
 // 한글화
@@ -40,7 +47,6 @@ export default function LifeRPG() {
 
   // 퀘스트 완료시 아이템 드랍
   function handleQuestComplete() {
-    // 인벤토리에 없는 아이템만 드랍 대상
     const candidates = ALL_ITEMS.filter(
       (item) => !inventory.some((i) => i.id === item.id)
     );
@@ -48,26 +54,22 @@ export default function LifeRPG() {
       setMsg("더 이상 드랍 가능한 아이템이 없습니다!");
       return;
     }
-    // 드랍확률 룰링
     const rolled = candidates.filter((item) => Math.random() < item.dropRate);
     if (rolled.length === 0) {
       setMsg("아이템을 획득하지 못했습니다!");
       return;
     }
-    // 여러 개 드랍되면 레어리티 높은 것만 1개
     rolled.sort((a, b) => raritySortValue(b.rarity) - raritySortValue(a.rarity));
     const loot = rolled[0];
     setInventory((inv) => [...inv, loot]);
     setMsg(`${rarityKor(loot.rarity)} 등급 [${loot.name}] 아이템을 획득했습니다!`);
   }
 
-  // 인벤토리 더블클릭 → 장비창 장착
   function handleEquip(item) {
     setEquipment((eq) => ({ ...eq, [item.type]: item }));
     setMsg(`[${item.name}] 장착 완료!`);
   }
 
-  // 장비창 더블클릭 → 해제
   function handleUnequip(type) {
     setEquipment((eq) => {
       const newEq = { ...eq };
@@ -75,6 +77,13 @@ export default function LifeRPG() {
       return newEq;
     });
   }
+
+  // 각 부위별 위치 (원하는대로 조절)
+  const slotPosition = {
+    weapon: { left: 10, top: 240 },
+    helmet: { left: 80, top: 30 },
+    armor: { left: 80, top: 160 },
+  };
 
   return (
     <div
@@ -91,7 +100,7 @@ export default function LifeRPG() {
         <div style={{ position: "relative", width: 220, height: 340 }}>
           <img src="/silhouette.png" alt="실루엣" style={{ width: 220, height: 340, filter: "brightness(0.6)" }} />
           {/* 장비 아이콘들 (부위별 지정 좌표) */}
-          {SLOT_LIST.map((slot, idx) => (
+          {SLOT_LIST.map((slot) =>
             equipment[slot.key] && (
               <img
                 key={slot.key}
@@ -100,16 +109,18 @@ export default function LifeRPG() {
                 onDoubleClick={() => handleUnequip(slot.key)}
                 style={{
                   position: "absolute",
-                  left: slot.key === "weapon" ? 10 : 80,
-                  top: slot.key === "weapon" ? 240 : 30,
-                  width: 48, height: 48, cursor: "pointer",
+                  left: slotPosition[slot.key]?.left || 20,
+                  top: slotPosition[slot.key]?.top || 60,
+                  width: 48,
+                  height: 48,
+                  cursor: "pointer",
                   border: "2px solid #fff3",
                   borderRadius: 10,
-                  background: "#1118"
+                  background: "#1118",
                 }}
               />
             )
-          ))}
+          )}
         </div>
         <div style={{ margin: "24px 0 0 0", textAlign: "center" }}>
           <div style={{ fontSize: 30, fontWeight: "bold", letterSpacing: 2 }}>Life R.P.G</div>
@@ -141,8 +152,14 @@ export default function LifeRPG() {
             <div
               key={item.id}
               style={{
-                display: "flex", flexDirection: "column", alignItems: "center",
-                border: "2px solid #888", borderRadius: 10, background: "#222a", padding: 4, width: 62
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                border: "2px solid #888",
+                borderRadius: 10,
+                background: "#222a",
+                padding: 4,
+                width: 62,
               }}
               title={`[${item.name}]\n${rarityKor(item.rarity)} 등급\n더블클릭: 장착`}
               onDoubleClick={() => handleEquip(item)}
