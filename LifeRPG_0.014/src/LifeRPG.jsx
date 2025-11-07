@@ -1,311 +1,325 @@
+// src/LifeRPG.jsx
 import React, { useState, useEffect } from "react";
 
-// ---- 아이템 DB (아이콘/이름/레어리티/타입/쓸모없음 등) ----
-const ITEMS = [
-  // 무기
-  { id: "sword_common", name: "무딘 칼", icon: "무딘칼_일반.png", type: "weapon", rarity: "일반" },
-  { id: "sword_rare", name: "루비소드", icon: "루비소드_희귀.png", type: "weapon", rarity: "희귀" },
-  { id: "sword_epic", name: "파멸의 검", icon: "파멸의검_에픽.png", type: "weapon", rarity: "에픽" },
-  { id: "sword_legend", name: "아스가르드의 빛", icon: "아스가르드의빛_전설.png", type: "weapon", rarity: "전설" },
-  // 투구
-  { id: "helmet_common", name: "녹슨 철 투구", icon: "녹슨 철 투구.png", type: "helmet", rarity: "일반" },
-  { id: "helmet_rare", name: "용기의 투구", icon: "용기의 투구.png", type: "helmet", rarity: "희귀" },
-  { id: "helmet_epic", name: "검은 달의 투구", icon: "검은 달의 투구.png", type: "helmet", rarity: "에픽" },
-  // 갑옷
-  { id: "armor_common", name: "낡은 철 갑옷", icon: "낡은 철 갑옷.png", type: "armor", rarity: "일반" },
-  { id: "armor_rare", name: "기사단 정예 갑주", icon: "기사단 정예 갑주.png", type: "armor", rarity: "희귀" },
-  // 쓸모없는 잡템
-  { id: "potion_useless", name: "이상한 포션", icon: "포션_쓸모없음.png", type: "potion", rarity: "일반", useless: true, desc: "효과 없음 (판매 전용)" },
-  { id: "banana_peel", name: "바나나 껍질", icon: "바나나껍질.png", type: "useless", rarity: "일반", useless: true, desc: "쓸데없음. 그냥 팔아버리세요." },
+// 실제 프로젝트에서는 public/ 폴더에 아이템 이미지를 넣으세요!
+const EQUIPMENT_TYPES = [
+  { key: "weapon", label: "무기", icon: "무딘칼_일반.png" },
+  { key: "helmet", label: "투구", icon: "녹슨 철 투구.png" },
+  { key: "armor", label: "갑옷", icon: "낡은 철 갑옷.png" },
 ];
 
-// ---- 초기 퀘스트 ----
+const ALL_ITEMS = [
+  // 장비 아이템
+  {
+    name: "무딘 칼", type: "weapon", rarity: "일반", img: "무딘칼_일반.png",
+  },
+  { name: "루비소드", type: "weapon", rarity: "희귀", img: "루비소드_희귀.png" },
+  { name: "파멸의 검", type: "weapon", rarity: "에픽", img: "파멸의검_에픽.png" },
+  { name: "아스가르드의 빛", type: "weapon", rarity: "전설", img: "아스가르드의빛_전설.png" },
+
+  { name: "녹슨 철 투구", type: "helmet", rarity: "일반", img: "녹슨 철 투구.png" },
+  { name: "용기의 투구", type: "helmet", rarity: "희귀", img: "용기의 투구.png" },
+  { name: "검은 달의 투구", type: "helmet", rarity: "에픽", img: "검은 달의 투구.png" },
+  { name: "신왕의 면류관", type: "helmet", rarity: "전설", img: "신왕의 면류관.png" },
+
+  { name: "낡은 철 갑옷", type: "armor", rarity: "일반", img: "낡은 철 갑옷.png" },
+  { name: "기사단 정예 갑주", type: "armor", rarity: "희귀", img: "기사단 정예 갑주.png" },
+  { name: "피의 결의 갑옷", type: "armor", rarity: "에픽", img: "피의 결의 갑옷.png" },
+  { name: "신성한 왕의 갑옷", type: "armor", rarity: "전설", img: "신성한 왕의 갑옷.png" },
+
+  // 쓸모없는 드랍 아이템 (상점판매 전용)
+  { name: "체력 포션", type: "junk", rarity: "일반", img: "체력포션.png" },
+  { name: "마나 포션", type: "junk", rarity: "일반", img: "마나포션.png" },
+  { name: "바나나 껍질", type: "junk", rarity: "희귀", img: "바나나껍질.png" },
+  { name: "맹독버섯", type: "junk", rarity: "에픽", img: "맹독버섯.png" },
+  { name: "삐삐 머리핀", type: "junk", rarity: "희귀", img: "삐삐머리핀.png" },
+];
+
+const ITEM_DROP_TABLE = [
+  ...ALL_ITEMS.filter(i => i.type !== "junk").map(i => ({ ...i, weight:
+    i.rarity === "일반" ? 60 : i.rarity === "희귀" ? 25 : i.rarity === "에픽" ? 10 : 5 })),
+  ...ALL_ITEMS.filter(i => i.type === "junk").map(i => ({ ...i, weight: 18 }))
+];
+
 const DEFAULT_QUESTS = [
-  { id: 1, text: "집 청소하기", reward: { gold: 30, xp: 10 }, done: false },
-  { id: 2, text: "설거지하기", reward: { gold: 25, xp: 8 }, done: false },
-  { id: 3, text: "빨래 돌리기", reward: { gold: 20, xp: 7 }, done: false },
+  { text: "집 청소하기", reward: { xp: 10, gold: 5 } },
+  { text: "설거지 하기", reward: { xp: 8, gold: 4 } },
+  { text: "빨래 널기", reward: { xp: 6, gold: 3 } },
 ];
 
-// ---- 드랍 확률/루팅 시스템 ----
-const DROP_TABLE = [
-  { id: "sword_common", weight: 50 },
-  { id: "helmet_common", weight: 30 },
-  { id: "armor_common", weight: 30 },
-  { id: "potion_useless", weight: 40 },
-  { id: "banana_peel", weight: 25 },
-  { id: "sword_rare", weight: 10 },
-  { id: "helmet_rare", weight: 8 },
-  { id: "armor_rare", weight: 6 },
-  { id: "sword_epic", weight: 3 },
-  { id: "helmet_epic", weight: 2 },
-  { id: "sword_legend", weight: 1 },
-];
+const BLANK_EQUIPMENT = EQUIPMENT_TYPES.reduce((acc, e) => ({ ...acc, [e.key]: null }), {});
 
-// ---- 최대 인벤토리 칸 ----
-const INVENTORY_SIZE = 12;
+const INV_SIZE = 12;
 
-// ---- 저장 및 불러오기 ----
-const saveKey = (user) => `liferpg_save_${user || "guest"}`;
+function weightedRandomItem(table) {
+  const total = table.reduce((sum, i) => sum + i.weight, 0);
+  let n = Math.random() * total;
+  for (const item of table) {
+    if (n < item.weight) return item;
+    n -= item.weight;
+  }
+  return table[0];
+}
 
-// ---- 메인 컴포넌트 ----
+const LOCAL_KEY = "liferpg_save";
+
 export default function LifeRPG() {
-  // 로그인 및 저장
-  const [user, setUser] = useState("");
-  const [loginInput, setLoginInput] = useState("");
-
+  // 로그인/저장
+  const [userId, setUserId] = useState("");
+  const [savedUser, setSavedUser] = useState("");
   // 게임 상태
-  const [xp, setXp] = useState(0);
+  const [xp, setXP] = useState(0);
   const [gold, setGold] = useState(0);
-  const [quests, setQuests] = useState(DEFAULT_QUESTS);
-  const [newQuest, setNewQuest] = useState("");
-  const [inventory, setInventory] = useState(Array(INVENTORY_SIZE).fill(null));
-  const [equipment, setEquipment] = useState({ weapon: null, helmet: null, armor: null });
-  const [shopOpen, setShopOpen] = useState(false);
-  const [sellIndex, setSellIndex] = useState(null);
+  const [equipment, setEquipment] = useState({ ...BLANK_EQUIPMENT });
+  const [inventory, setInventory] = useState(Array(INV_SIZE).fill(null));
+  const [quests, setQuests] = useState([...DEFAULT_QUESTS]);
+  const [questInput, setQuestInput] = useState("");
+  const [shopTab, setShopTab] = useState(false);
+  const [log, setLog] = useState([]);
 
-  // ------------- 저장/불러오기 -------------
+  // 저장/불러오기
   useEffect(() => {
-    if (!user) return;
-    // 불러오기
-    const data = localStorage.getItem(saveKey(user));
-    if (data) {
-      const { xp, gold, quests, inventory, equipment } = JSON.parse(data);
-      setXp(xp); setGold(gold); setQuests(quests); setInventory(inventory); setEquipment(equipment);
+    if (savedUser) {
+      const raw = localStorage.getItem(LOCAL_KEY + "_" + savedUser);
+      if (raw) {
+        const { xp, gold, equipment, inventory, quests } = JSON.parse(raw);
+        setXP(xp); setGold(gold);
+        setEquipment(equipment); setInventory(inventory);
+        setQuests(quests);
+      }
+    }
+  }, [savedUser]);
+  useEffect(() => {
+    if (savedUser) {
+      localStorage.setItem(
+        LOCAL_KEY + "_" + savedUser,
+        JSON.stringify({ xp, gold, equipment, inventory, quests })
+      );
+    }
+  }, [xp, gold, equipment, inventory, quests, savedUser]);
+
+  // 로그인
+  function handleLogin() {
+    if (!userId) return;
+    setSavedUser(userId);
+    setLog(["로그인 성공!"]);
+  }
+
+  // 퀘스트 추가
+  function addQuest() {
+    if (questInput.trim()) {
+      setQuests([...quests, { text: questInput, reward: { xp: 10, gold: 5 } }]);
+      setQuestInput("");
+    }
+  }
+
+  // 퀘스트 완료(아이템 루팅)
+  function completeQuest(idx) {
+    const { xp: rx, gold: rg } = quests[idx].reward;
+    setXP(xp + rx);
+    setGold(gold + rg);
+    let dropMsg = "";
+    if (Math.random() < 0.65) {
+      // 65% 확률 드랍
+      const drop = weightedRandomItem(ITEM_DROP_TABLE);
+      // 인벤토리 빈칸
+      const invIdx = inventory.findIndex(i => !i);
+      if (invIdx !== -1) {
+        const newInv = [...inventory];
+        newInv[invIdx] = drop;
+        setInventory(newInv);
+        dropMsg = `획득! [${drop.name}]`;
+      } else {
+        dropMsg = "인벤토리 공간 부족!";
+      }
     } else {
-      // 기본값 리셋
-      setXp(0); setGold(0);
-      setQuests(DEFAULT_QUESTS);
-      setInventory(Array(INVENTORY_SIZE).fill(null));
-      setEquipment({ weapon: null, helmet: null, armor: null });
+      dropMsg = "아이템을 획득하지 못함";
     }
-  }, [user]);
-
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem(saveKey(user), JSON.stringify({ xp, gold, quests, inventory, equipment }));
-    }
-  }, [user, xp, gold, quests, inventory, equipment]);
-
-  // ------------- 로그인 -------------
-  if (!user) {
-    return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 80 }}>
-        <h1>Life R.P.G</h1>
-        <img src="/logo.png" alt="logo" style={{ width: 100, marginBottom: 24 }} />
-        <input
-          placeholder="아이디 입력"
-          value={loginInput}
-          onChange={e => setLoginInput(e.target.value)}
-          style={{ fontSize: 18, padding: 8, marginBottom: 12, borderRadius: 6, border: "1px solid #bbb" }}
-        />
-        <button style={{ fontSize: 18, padding: "8px 24px" }} onClick={() => setUser(loginInput || "guest")}>로그인</button>
-      </div>
-    );
+    setLog([`퀘스트 완료: ${quests[idx].text} (경험치 +${rx}, 골드 +${rg})`, dropMsg]);
+    setQuests(quests.filter((_, i) => i !== idx));
   }
 
-  // ------------- 퀘스트 관련 -------------
-  const handleQuestComplete = idx => {
-    if (quests[idx].done) return;
-    // 보상
-    setXp(xp + quests[idx].reward.xp);
-    setGold(gold + quests[idx].reward.gold);
-    // 루팅 (확률)
-    if (Math.random() < 0.6) {
-      const item = rollDrop();
-      addToInventory(item);
-      alert(`[${item.name}]을(를) 획득했습니다!`);
-    }
-    // 완료 처리
-    setQuests(quests.map((q, i) => i === idx ? { ...q, done: true } : q));
-  };
-
-  function rollDrop() {
-    // 확률 기반 루팅
-    const total = DROP_TABLE.reduce((sum, cur) => sum + cur.weight, 0);
-    let r = Math.random() * total;
-    for (const entry of DROP_TABLE) {
-      if (r < entry.weight) return ITEMS.find(i => i.id === entry.id);
-      r -= entry.weight;
-    }
-    return ITEMS[0];
-  }
-
-  function addToInventory(item) {
-    setInventory(prev => {
-      const i = prev.findIndex(x => x === null);
-      if (i === -1) return prev; // 가득 찼으면 무시
-      const newInv = [...prev];
-      newInv[i] = item;
-      return newInv;
-    });
-  }
-
-  // ------------- 장비 관련 -------------
-  const handleEquip = idx => {
+  // 인벤토리 더블클릭 → 장착/판매
+  function handleInventoryDoubleClick(idx) {
     const item = inventory[idx];
     if (!item) return;
-    if (!["weapon", "helmet", "armor"].includes(item.type)) return;
-    setEquipment(prev => ({ ...prev, [item.type]: item }));
-    setInventory(prev => prev.map((v, i) => (i === idx ? null : v)));
-  };
-  const handleUnequip = type => {
-    setEquipment(prev => {
-      if (!prev[type]) return prev;
-      addToInventory(prev[type]);
-      return { ...prev, [type]: null };
-    });
-  };
+    if (item.type === "junk") {
+      // 상점에서만 판매하도록 하려면 shopTab 조건 추가
+      setGold(gold + 3);
+      const newInv = [...inventory];
+      newInv[idx] = null;
+      setInventory(newInv);
+      setLog([`${item.name}을(를) 판매! (골드+3)`]);
+      return;
+    }
+    // 장비 아이템
+    const slot = EQUIPMENT_TYPES.find(e => e.key === item.type);
+    if (slot) {
+      // 이미 해당 부위에 장비 있으면 교체
+      const newEquip = { ...equipment, [slot.key]: item };
+      setEquipment(newEquip);
+      const newInv = [...inventory];
+      newInv[idx] = null;
+      setInventory(newInv);
+      setLog([`${item.name} 장착!`]);
+    }
+  }
+  // 장비 더블클릭 → 해제
+  function handleEquipmentDoubleClick(type) {
+    if (!equipment[type]) return;
+    // 인벤토리 빈칸에 해제
+    const idx = inventory.findIndex(i => !i);
+    if (idx === -1) {
+      setLog(["인벤토리 공간 부족!"]);
+      return;
+    }
+    const newInv = [...inventory];
+    newInv[idx] = equipment[type];
+    setInventory(newInv);
+    setEquipment({ ...equipment, [type]: null });
+    setLog([`${equipment[type].name} 해제!`]);
+  }
 
-  // ------------- 아이템 판매 -------------
-  const handleSell = idx => {
-    if (!inventory[idx]) return;
-    setSellIndex(idx);
-    setShopOpen(true);
-  };
-  const confirmSell = price => {
-    setGold(gold + price);
-    setInventory(prev => prev.map((v, i) => (i === sellIndex ? null : v)));
-    setSellIndex(null); setShopOpen(false);
-  };
+  // 상점 - 인벤토리에서 판매
+  function handleShopSell(idx) {
+    const item = inventory[idx];
+    if (!item || item.type !== "junk") return;
+    setGold(gold + 3);
+    const newInv = [...inventory];
+    newInv[idx] = null;
+    setInventory(newInv);
+    setLog([`${item.name} 상점 판매! (골드+3)`]);
+  }
 
-  // ------------- UI -------------
-  return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "#232323" }}>
-      {/* --- 좌측: 캐릭터 및 장비 --- */}
-      <div style={{ width: 320, background: "#2e2e2e", color: "#fff", padding: 28, margin: 20, borderRadius: 20 }}>
-        <h2>Life R.P.G</h2>
-        <div style={{ position: "relative", width: 180, height: 240, margin: "0 auto 16px" }}>
-          <img src="/silhouette.png" alt="캐릭터" style={{ width: "100%", height: "100%" }} />
-          {/* 장비 아이콘 (좌/우로 분산) */}
-          <div style={{ position: "absolute", left: -36, top: 36 }}>
-            {equipment.helmet && (
-              <img
-                src={`/${equipment.helmet.icon}`}
-                alt={equipment.helmet.name}
-                style={{ width: 44, cursor: "pointer" }}
-                title="투구 해제"
-                onDoubleClick={() => handleUnequip("helmet")}
-              />
-            )}
-          </div>
-          <div style={{ position: "absolute", left: -36, bottom: 10 }}>
-            {equipment.armor && (
-              <img
-                src={`/${equipment.armor.icon}`}
-                alt={equipment.armor.name}
-                style={{ width: 44, cursor: "pointer" }}
-                title="갑옷 해제"
-                onDoubleClick={() => handleUnequip("armor")}
-              />
-            )}
-          </div>
-          <div style={{ position: "absolute", right: -36, top: 36 }}>
-            {equipment.weapon && (
-              <img
-                src={`/${equipment.weapon.icon}`}
-                alt={equipment.weapon.name}
-                style={{ width: 44, cursor: "pointer" }}
-                title="무기 해제"
-                onDoubleClick={() => handleUnequip("weapon")}
-              />
-            )}
-          </div>
-        </div>
-        <div style={{ fontSize: 18, margin: "16px 0" }}>경험치: {xp} | 골드: {gold}</div>
-        <div style={{ fontSize: 15, color: "#c2e7ff", marginBottom: 10 }}>
-          힘: 10 / 지능: 10 / 운: 10
-        </div>
-      </div>
-
-      {/* --- 우측: 퀘스트, 인벤토리, 상점 --- */}
-      <div style={{ flex: 1, padding: 32, color: "#fff" }}>
-        {/* 퀘스트 */}
-        <h2>퀘스트</h2>
-        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+  // 화면
+  if (!savedUser)
+    return (
+      <div style={{ width: "100vw", height: "100vh", background: "#232323", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+        <h1 style={{ color: "#fff", marginBottom: 24, fontSize: 36 }}>Life R.P.G</h1>
+        <div style={{ background: "#2d2d2d", padding: 32, borderRadius: 12 }}>
           <input
-            value={newQuest}
-            placeholder="퀘스트 추가"
-            onChange={e => setNewQuest(e.target.value)}
-            style={{ fontSize: 16, padding: 5, borderRadius: 6, marginRight: 6 }}
-            onKeyDown={e => { if (e.key === "Enter" && newQuest.trim()) {
-              setQuests([...quests, { id: Date.now(), text: newQuest, reward: { gold: 10, xp: 4 }, done: false }]); setNewQuest("");
-            }}}
+            value={userId}
+            onChange={e => setUserId(e.target.value)}
+            placeholder="아이디를 입력하세요"
+            style={{ fontSize: 18, padding: 8, borderRadius: 4, width: 200 }}
           />
-          <button onClick={() => {
-            if (newQuest.trim()) {
-              setQuests([...quests, { id: Date.now(), text: newQuest, reward: { gold: 10, xp: 4 }, done: false }]);
-              setNewQuest("");
-            }
-          }}>추가</button>
+          <button onClick={handleLogin} style={{ marginLeft: 12, fontSize: 18 }}>로그인</button>
         </div>
-        <ul style={{ margin: "16px 0 24px 0", padding: 0 }}>
-          {quests.map((q, i) => (
-            <li key={q.id} style={{ fontSize: 17, marginBottom: 7, display: "flex", alignItems: "center", opacity: q.done ? 0.5 : 1 }}>
-              <span style={{ flex: 1 }}>{q.text}</span>
-              <span style={{ color: "#ffd700", marginLeft: 8 }}>+{q.reward.gold}G</span>
-              <span style={{ color: "#70ffd7", marginLeft: 4 }}>+{q.reward.xp}XP</span>
-              <button disabled={q.done} style={{ marginLeft: 12, padding: "2px 10px", cursor: q.done ? "not-allowed" : "pointer" }}
-                onClick={() => handleQuestComplete(i)}
-              >{q.done ? "완료" : "완료하기"}</button>
-            </li>
-          ))}
-        </ul>
-
-        {/* 인벤토리 */}
-        <h2>인벤토리</h2>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, minHeight: 110, background: "#262626", borderRadius: 14, padding: 18 }}>
-          {inventory.map((item, idx) =>
-            <div key={idx} style={{
-              width: 56, height: 56, border: "2px solid #333", borderRadius: 8,
-              display: "flex", alignItems: "center", justifyContent: "center", background: item ? "#444" : "#222", position: "relative"
-            }}>
-              {item && (
-                <img
-                  src={`/${item.icon}`}
-                  alt={item.name}
-                  title={`${item.name} (${item.rarity}${item.useless ? "/쓸모없음" : ""})${item.desc ? `\n${item.desc}` : ""}\n더블클릭: 장착/판매`}
-                  style={{ width: 44, height: 44, cursor: item.useless ? "pointer" : "pointer" }}
-                  onDoubleClick={() => item.useless ? handleSell(idx) : handleEquip(idx)}
-                />
-              )}
-              {!item && (
-                <span style={{ color: "#666" }}>빈칸</span>
-              )}
-            </div>
-          )}
-        </div>
-        <div style={{ fontSize: 14, marginTop: 10 }}>
-          <span style={{ color: "#aaa" }}>더블클릭: 무기/투구/갑옷 장착, 쓸모없는 아이템은 판매</span>
-        </div>
-
-        {/* 상점 (판매) */}
-        {shopOpen && sellIndex !== null && inventory[sellIndex] && (
-          <div style={{
-            position: "fixed", left: 0, top: 0, width: "100vw", height: "100vh",
-            background: "rgba(0,0,0,0.6)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center"
-          }}>
-            <div style={{ background: "#222", padding: 32, borderRadius: 18, color: "#fff", textAlign: "center" }}>
-              <h3>아이템 판매</h3>
-              <div>
-                <img src={`/${inventory[sellIndex].icon}`} alt={inventory[sellIndex].name} style={{ width: 60, marginBottom: 16 }} />
-                <div style={{ fontSize: 17, marginBottom: 6 }}>{inventory[sellIndex].name}</div>
-                <div style={{ fontSize: 14, color: "#aaa", marginBottom: 16 }}>
-                  {inventory[sellIndex].desc || "아이템을 판매하시겠습니까?"}
-                </div>
-                <button style={{ margin: "0 10px", padding: "6px 22px" }}
-                  onClick={() => confirmSell(12)}
-                >12 G에 판매</button>
-                <button style={{ margin: "0 10px", padding: "6px 22px" }} onClick={() => setShopOpen(false)}>취소</button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* 로그아웃 */}
-        <div style={{ marginTop: 24 }}>
-          <button onClick={() => setUser("")} style={{ color: "#eee", background: "#444", padding: "4px 18px", borderRadius: 8 }}>로그아웃</button>
-        </div>
+        <div style={{ color: "#bbb", marginTop: 20, fontSize: 13 }}>아무 아이디나 사용, 자동저장</div>
       </div>
-    </div>
-  );
-}
+    );
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#222", color: "#fff", fontFamily: "Pretendard, sans-serif" }}>
+      <div style={{ display: "flex", gap: 40, padding: 40, maxWidth: 1100, margin: "0 auto" }}>
+        {/* 캐릭터/장비창 */}
+        <div style={{ flex: "0 0 300px", background: "#292929", borderRadius: 16, padding: 24, boxShadow: "0 2px 16px #0002" }}>
+          <h2 style={{ textAlign: "center" }}>장비</h2>
+          {/* 실루엣 */}
+          <div style={{ position: "relative", width: 180, height: 240, margin: "16px auto" }}>
+            <img src="/silhouette.png" alt="캐릭터" style={{ width: "100%", height: "100%" }} />
+            {/* 장비 아이콘 (실루엣 양옆에 3개씩 배치) */}
+            {EQUIPMENT_TYPES.map((slot, idx) => (
+              <div
+                key={slot.key}
+                style={{
+                  position: "absolute",
+                  left: idx === 0 ? -40 : idx === 1 ? 160 : 70,
+                  top: idx === 2 ? 170 : 10 + idx * 60,
+                  width: 48, height: 48, background: "#181818aa", borderRadius: 12,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  border: "2px solid #3a3a3a", cursor: equipment[slot.key] ? "pointer" : "default"
+                }}
+                onDoubleClick={() => handleEquipmentDoubleClick(slot.key)}
+                title={equipment[slot.key]?.name || `${slot.label} 칸 (더블클릭 해제)`}
+              >
+                {equipment[slot.key] ?
+                  <img src={`/${equipment[slot.key].img}`} alt={equipment[slot.key].name} style={{ width: 40, height: 40 }} /> :
+                  <span style={{ color: "#888", fontSize: 22 }}>{slot.label}</span>
+                }
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop: 24, fontSize: 18 }}>경험치: {xp} | 골드: {gold}</div>
+        </div>
+
+        {/* 인벤토리/퀘스트/상점 */}
+        <div style={{ flex: 1 }}>
+          <h2>
+            <button
+              onClick={() => setShopTab(false)}
+              style={{
+                fontSize: 20, fontWeight: shopTab ? 400 : 700,
+                background: shopTab ? "#333" : "#fff", color: shopTab ? "#fff" : "#222",
+                border: "none", borderRadius: 6, marginRight: 8, padding: "2px 18px", cursor: "pointer"
+              }}
+            >인벤토리</button>
+            <button
+              onClick={() => setShopTab(true)}
+              style={{
+                fontSize: 20, fontWeight: shopTab ? 700 : 400,
+                background: shopTab ? "#fff" : "#333", color: shopTab ? "#222" : "#fff",
+                border: "none", borderRadius: 6, padding: "2px 18px", cursor: "pointer"
+              }}
+            >상점</button>
+          </h2>
+          {!shopTab ? (
+            <>
+              {/* 인벤토리 */}
+              <div style={{
+                display: "grid", gridTemplateColumns: "repeat(6, 62px)", gap: 12, background: "#242424", padding: 18, borderRadius: 12, marginBottom: 24
+              }}>
+                {inventory.map((item, idx) =>
+                  <div
+                    key={idx}
+                    style={{
+                      width: 60, height: 60, background: item ? "#18181a" : "#333",
+                      borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center",
+                      border: "2px solid #444", cursor: item ? "pointer" : "default", position: "relative"
+                    }}
+                    title={item ? `${item.name} (${item.rarity})${item.type === "junk" ? " (쓸모없음, 판매가능)" : ""}` : "빈칸"}
+                    onDoubleClick={() => handleInventoryDoubleClick(idx)}
+                  >
+                    {item ?
+                      <img src={`/${item.img}`} alt={item.name} style={{ width: 44, height: 44 }} /> :
+                      <span style={{ color: "#888" }}>빈칸</span>
+                    }
+                  </div>
+                )}
+              </div>
+              {/* 퀘스트 */}
+              <h3>퀘스트</h3>
+              <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
+                <input
+                  value={questInput}
+                  onChange={e => setQuestInput(e.target.value)}
+                  placeholder="퀘스트 내용을 입력하세요"
+                  style={{ flex: 1, padding: 6, borderRadius: 4, border: "1px solid #aaa" }}
+                  onKeyDown={e => e.key === "Enter" && addQuest()}
+                />
+                <button onClick={addQuest} style={{ borderRadius: 6, fontWeight: 600 }}>추가</button>
+              </div>
+              <div>
+                {quests.map((q, idx) => (
+                  <div key={idx} style={{ background: "#363636", borderRadius: 7, padding: "8px 16px", marginBottom: 7, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div>
+                      <span style={{ fontWeight: 600 }}>{q.text}</span>
+                      <span style={{ fontSize: 14, color: "#ffdc91", marginLeft: 8 }}>
+                        (경험치+{q.reward.xp}, 골드+{q.reward.gold})
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => completeQuest(idx)}
+                      style={{ borderRadius: 6, fontWeight: 600, background: "#198e1e", color: "#fff", padding: "4px 14px", cursor: "pointer" }}>
+                      완료
+                    </button>
+                  </div>
+                ))}
+              </div>
+              {/* 로그 */}
+              <div style={{ marginTop: 14, fontSize: 13, color: "#aaa", minHeight: 34 }}>
+                {log.map((l, i) => <div key={i}>{l}</div>)}
+              </div>
+              <div style={{ marginTop: 25, color: "#888", fontSize: 13 }}>
+                - 인벤토리 아이템 더블클릭: 장착/판매<br />
+                - 장비 아이콘 더블클릭: 해제
