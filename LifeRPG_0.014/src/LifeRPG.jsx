@@ -112,19 +112,17 @@ export default function LifeRPG() {
     setQuests(quests.filter((_, i) => i !== idx));
   }
 
+  // 인벤토리 더블클릭: 장비만 장착(잡템은 판매 불가)
   function handleInventoryDoubleClick(idx) {
     const item = inventory[idx];
     if (!item) return;
+    // 잡템은 판매 불가 (상점-판매 탭에서만)
     if (item.type === "junk") {
-      setGold(gold + 3);
-      const newInv = [...inventory]; newInv[idx] = null;
-      setInventory(newInv);
-      setLog([`${item.name}을(를) 판매! (골드+3)`]);
+      setLog(["잡템은 상점-판매 탭에서만 판매 가능합니다!"]);
       return;
     }
     const slot = EQUIP_TYPES.find(e => e.key === item.type);
     if (slot) {
-      // 장착(덮어쓰기), 인벤토리->장비
       const newEquip = { ...equipment, [slot.key]: item };
       setEquipment(newEquip);
       const newInv = [...inventory]; newInv[idx] = null;
@@ -133,6 +131,7 @@ export default function LifeRPG() {
     }
   }
 
+  // 장비 더블클릭 → 해제
   function handleEquipmentDoubleClick(type) {
     if (!equipment[type]) return;
     const idx = inventory.findIndex(i => !i);
@@ -145,6 +144,7 @@ export default function LifeRPG() {
     setLog([`${equipment[type].name} 해제!`]);
   }
 
+  // 상점-판매 탭에서만 잡템 더블클릭 판매 가능
   function handleShopSell(idx) {
     const item = inventory[idx];
     if (!item || item.type !== "junk") return;
@@ -164,7 +164,6 @@ export default function LifeRPG() {
     setLog([`${item.name} 구매 성공! (${item.desc})`]);
   }
 
-  // 6칸 장비 위치: 왼쪽(무기/투구/갑옷), 오른쪽(장갑/방패/신발)
   const equipPositions = [
     { left: -70, top: 10 }, { left: -70, top: 70 }, { left: -70, top: 130 },
     { left: 210, top: 10 }, { left: 210, top: 70 }, { left: 210, top: 130 }
@@ -317,12 +316,12 @@ export default function LifeRPG() {
                 {log.map((l, i) => <div key={i}>{l}</div>)}
               </div>
               <div style={{ marginTop: 25, color: "#888", fontSize: 13 }}>
-                - 인벤토리 아이템 더블클릭: 장착/판매<br />
-                - 장비 아이콘 더블클릭: 해제
+                - 인벤토리 아이템 더블클릭: 장착<br />
+                - 장비 아이콘 더블클릭: 해제<br />
+                - 쓸모없는 아이템은 상점-판매 탭에서만 판매 가능
               </div>
             </>
           )}
-          {/* 보상 탭에서는 로그만 출력 */}
           {shopTab === "reward" && (
             <div style={{ marginTop: 24, fontSize: 13, color: "#aaa", minHeight: 40 }}>
               {log.map((l, i) => <div key={i}>{l}</div>)}
