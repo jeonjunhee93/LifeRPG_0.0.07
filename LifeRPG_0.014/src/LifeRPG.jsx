@@ -1,8 +1,8 @@
 // src/LifeRPG.jsx
 import React, { useState, useEffect } from "react";
 
-// 실제 프로젝트에서는 public/ 폴더에 아이템 이미지를 넣으세요!
-const EQUIPMENT_TYPES = [
+// --- 장비/잡템 데이터 ---
+const EQUIP_TYPES = [
   { key: "weapon", label: "무기", icon: "무딘칼_일반.png" },
   { key: "helmet", label: "투구", icon: "녹슨 철 투구.png" },
   { key: "armor", label: "갑옷", icon: "낡은 철 갑옷.png" },
@@ -10,24 +10,19 @@ const EQUIPMENT_TYPES = [
 
 const ALL_ITEMS = [
   // 장비 아이템
-  {
-    name: "무딘 칼", type: "weapon", rarity: "일반", img: "무딘칼_일반.png",
-  },
+  { name: "무딘 칼", type: "weapon", rarity: "일반", img: "무딘칼_일반.png" },
   { name: "루비소드", type: "weapon", rarity: "희귀", img: "루비소드_희귀.png" },
   { name: "파멸의 검", type: "weapon", rarity: "에픽", img: "파멸의검_에픽.png" },
   { name: "아스가르드의 빛", type: "weapon", rarity: "전설", img: "아스가르드의빛_전설.png" },
-
   { name: "녹슨 철 투구", type: "helmet", rarity: "일반", img: "녹슨 철 투구.png" },
   { name: "용기의 투구", type: "helmet", rarity: "희귀", img: "용기의 투구.png" },
   { name: "검은 달의 투구", type: "helmet", rarity: "에픽", img: "검은 달의 투구.png" },
   { name: "신왕의 면류관", type: "helmet", rarity: "전설", img: "신왕의 면류관.png" },
-
   { name: "낡은 철 갑옷", type: "armor", rarity: "일반", img: "낡은 철 갑옷.png" },
   { name: "기사단 정예 갑주", type: "armor", rarity: "희귀", img: "기사단 정예 갑주.png" },
   { name: "피의 결의 갑옷", type: "armor", rarity: "에픽", img: "피의 결의 갑옷.png" },
   { name: "신성한 왕의 갑옷", type: "armor", rarity: "전설", img: "신성한 왕의 갑옷.png" },
-
-  // 쓸모없는 드랍 아이템 (상점판매 전용)
+  // 쓸모없는 아이템(판매 전용)
   { name: "체력 포션", type: "junk", rarity: "일반", img: "체력포션.png" },
   { name: "마나 포션", type: "junk", rarity: "일반", img: "마나포션.png" },
   { name: "바나나 껍질", type: "junk", rarity: "희귀", img: "바나나껍질.png" },
@@ -47,8 +42,7 @@ const DEFAULT_QUESTS = [
   { text: "빨래 널기", reward: { xp: 6, gold: 3 } },
 ];
 
-const BLANK_EQUIPMENT = EQUIPMENT_TYPES.reduce((acc, e) => ({ ...acc, [e.key]: null }), {});
-
+const BLANK_EQUIPMENT = EQUIP_TYPES.reduce((acc, e) => ({ ...acc, [e.key]: null }), {});
 const INV_SIZE = 12;
 
 function weightedRandomItem(table) {
@@ -144,7 +138,6 @@ export default function LifeRPG() {
     const item = inventory[idx];
     if (!item) return;
     if (item.type === "junk") {
-      // 상점에서만 판매하도록 하려면 shopTab 조건 추가
       setGold(gold + 3);
       const newInv = [...inventory];
       newInv[idx] = null;
@@ -153,7 +146,7 @@ export default function LifeRPG() {
       return;
     }
     // 장비 아이템
-    const slot = EQUIPMENT_TYPES.find(e => e.key === item.type);
+    const slot = EQUIP_TYPES.find(e => e.key === item.type);
     if (slot) {
       // 이미 해당 부위에 장비 있으면 교체
       const newEquip = { ...equipment, [slot.key]: item };
@@ -219,7 +212,7 @@ export default function LifeRPG() {
           <div style={{ position: "relative", width: 180, height: 240, margin: "16px auto" }}>
             <img src="/silhouette.png" alt="캐릭터" style={{ width: "100%", height: "100%" }} />
             {/* 장비 아이콘 (실루엣 양옆에 3개씩 배치) */}
-            {EQUIPMENT_TYPES.map((slot, idx) => (
+            {EQUIP_TYPES.map((slot, idx) => (
               <div
                 key={slot.key}
                 style={{
@@ -323,3 +316,38 @@ export default function LifeRPG() {
               <div style={{ marginTop: 25, color: "#888", fontSize: 13 }}>
                 - 인벤토리 아이템 더블클릭: 장착/판매<br />
                 - 장비 아이콘 더블클릭: 해제
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={{
+                display: "grid", gridTemplateColumns: "repeat(6, 62px)", gap: 12, background: "#222", padding: 18, borderRadius: 12, marginBottom: 24
+              }}>
+                {inventory.map((item, idx) =>
+                  <div
+                    key={idx}
+                    style={{
+                      width: 60, height: 60, background: item ? "#18181a" : "#333",
+                      borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center",
+                      border: "2px solid #444", cursor: item && item.type === "junk" ? "pointer" : "not-allowed"
+                    }}
+                    title={item && item.type === "junk" ? "더블클릭: 판매" : ""}
+                    onDoubleClick={() => handleShopSell(idx)}
+                  >
+                    {item ?
+                      <img src={`/${item.img}`} alt={item.name} style={{ width: 44, height: 44, opacity: item.type === "junk" ? 1 : 0.4 }} /> :
+                      <span style={{ color: "#888" }}>빈칸</span>
+                    }
+                  </div>
+                )}
+              </div>
+              <div style={{ marginTop: 20, color: "#ffdc91", fontSize: 15 }}>
+                ※ 상점에서는 <b>쓸모없는 아이템만</b> 판매 가능합니다. (더블클릭)
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
