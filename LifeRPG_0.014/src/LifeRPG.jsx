@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-// ... (ALL_ITEMS, EQUIP_SLOTS 등은 이전 답변과 동일하니 생략, 필요시 붙여넣기) ...
+// --- 상수 정의 ---
 const EQUIP_SLOTS = [
   { key: "weapon", label: "무기", position: "left" },
   { key: "helmet", label: "투구", position: "left" },
@@ -55,7 +55,7 @@ function getRandomLoot() {
   return candidates[Math.floor(Math.random() * candidates.length)];
 }
 
-// 로그인 화면
+// --- 로그인 화면 ---
 function LoginScreen({ onLogin }) {
   const [id, setId] = useState("");
   const [warn, setWarn] = useState("");
@@ -103,7 +103,7 @@ function LoginScreen({ onLogin }) {
   );
 }
 
-// 장비창(좌우 3개씩) - 이전과 동일
+// --- 장비창(좌우 3개씩) ---
 function CharacterPanel({ equipment, onIconDoubleClick }) {
   const leftSlots = EQUIP_SLOTS.filter(slot => slot.position === "left");
   const rightSlots = EQUIP_SLOTS.filter(slot => slot.position === "right");
@@ -157,9 +157,8 @@ function CharacterPanel({ equipment, onIconDoubleClick }) {
   );
 }
 
-// 메인 RPG 컴포넌트
+// --- RPG 메인 화면 ---
 function RPGGame({ userId, onLogout }) {
-  // ... (아래는 이전 코드와 거의 동일, 아이디 입력란/저장버튼 제거) ...
   const [equipment, setEquipment] = useState({
     weapon: null, helmet: null, armor: null, shield: null, glove: null, boots: null,
   });
@@ -173,18 +172,20 @@ function RPGGame({ userId, onLogout }) {
   const [message, setMessage] = useState("");
   const [activeTab, setActiveTab] = useState("quest");
 
-  // 더블클릭 장착/해제
+  // 인벤토리 더블클릭 → 장착
   const handleInventoryDoubleClick = item => {
     setEquipment(prev => ({
       ...prev, [item.key]: item,
     }));
     setInventory(inv => inv.filter(i => i !== item));
   };
+  // 장비 더블클릭 → 해제
   const handleEquipDoubleClick = slotKey => {
     if (!equipment[slotKey]) return;
     setInventory(inv => [...inv, equipment[slotKey]]);
     setEquipment(prev => ({ ...prev, [slotKey]: null }));
   };
+
   // 퀘스트 추가
   const handleQuestAdd = () => {
     if (questInput.trim()) {
@@ -219,7 +220,7 @@ function RPGGame({ userId, onLogout }) {
     setMessage(`${item.emoji} ${item.name} 구매 완료!`);
     setTimeout(() => setMessage(""), 2000);
   };
-  // 저장/불러오기 (아이디로)
+  // 저장/불러오기
   const handleSave = () => {
     if (!userId) return;
     const data = { equipment, inventory, quests, xp, gold };
@@ -250,14 +251,13 @@ function RPGGame({ userId, onLogout }) {
     }
   };
 
+  // 자동 저장 (선택)
   useEffect(() => {
     if (!userId) return;
     const interval = setInterval(handleSave, 60000);
     return () => clearInterval(interval);
-    // eslint-disable-next-line
   }, [userId, equipment, inventory, quests, xp, gold]);
 
-  // --- 게임 화면 ---
   return (
     <div style={{ background: "#222", minHeight: "100vh", color: "#fff", fontFamily: "Pretendard, sans-serif", padding: 32 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
@@ -310,4 +310,54 @@ function RPGGame({ userId, onLogout }) {
                     style={{
                       width: 56, height: 56, background: "#333c",
                       border: `2px solid ${item.rarity === "전설" ? "#FFD700" : item.rarity === "에픽" ? "#c0f" : item.rarity === "희귀" ? "#08f" : "#555"}`,
-                      borderRadius: 8, display: "flex", align
+                      borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer"
+                    }}>
+                    <img src={item.icon} alt={item.name} style={{ width: 48, height: 48 }} />
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+          {activeTab === "shop" && (
+            <div>
+              <h2>상점</h2>
+              <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                {SHOP_ITEMS.map(item => (
+                  <div key={item.name} style={{
+                    background: "#444a", padding: 16, borderRadius: 12,
+                    width: 150, textAlign: "center", border: "2px solid #555"
+                  }}>
+                    <div style={{ fontSize: 36 }}>{item.emoji}</div>
+                    <b>{item.name}</b>
+                    <div style={{ margin: "6px 0", fontSize: 13, color: "#ccc" }}>{item.description}</div>
+                    <div style={{ marginBottom: 8, color: "#ffe600" }}>💰 {item.price}G</div>
+                    <button onClick={() => handleBuy(item)}
+                      style={{ width: "90%", padding: 4, background: "#006eff", color: "#fff", border: "none", borderRadius: 8 }}>
+                      구매
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+      <div style={{ marginTop: 18, color: "#fc0", fontSize: 16, minHeight: 24 }}>{message}</div>
+      <div style={{ marginTop: 8, color: "#bbb", fontSize: 13 }}>
+        - 인벤토리 아이템 더블클릭: 장착<br />
+        - 장비 아이콘 더블클릭: 해제<br />
+        - 퀘스트 완료 시 낮은 확률로 아이템 루팅<br />
+        - 상점에서 골드로 다양한 보상 구매 가능<br />
+        - 저장/불러오기 시 아이디는 꼭 입력!<br />
+      </div>
+    </div>
+  );
+}
+
+// --- 최상위 App (로그인/게임 화면 전환) ---
+export default function LifeRPG() {
+  const [userId, setUserId] = useState("");
+  return userId
+    ? <RPGGame userId={userId} onLogout={() => setUserId("")} />
+    : <LoginScreen onLogin={setUserId} />;
+}
