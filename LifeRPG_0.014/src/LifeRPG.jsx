@@ -1,51 +1,46 @@
 import React, { useState } from "react";
 
-// 장비 부위
 const EQUIP_SLOTS = ["무기", "투구", "갑옷", "장갑", "방패", "신발"];
-// 양옆 배치용
 const LEFT_SLOTS = ["무기", "투구", "갑옷"];
 const RIGHT_SLOTS = ["장갑", "방패", "신발"];
 
-// 장비/소모품/쓸모없는아이템 목록
 const ALL_ITEMS = [
-  // 장비: 부위/등급
-  { name: "무딘 칼", slot: "무기", rarity: "일반", img: "/public/무딘칼_일반.png", value: 50 },
-  { name: "파멸의 검", slot: "무기", rarity: "에픽", img: "/public/파멸의검_에픽.png", value: 500 },
-  { name: "루비소드", slot: "무기", rarity: "희귀", img: "/public/루비소드_희귀.png", value: 120 },
-  { name: "아스가르드의 빛", slot: "무기", rarity: "전설", img: "/public/아스가르드의빛_전설.png", value: 2000 },
-
-  { name: "녹슨 철 투구", slot: "투구", rarity: "일반", img: "/public/녹슨 철 투구.png", value: 40 },
-  { name: "용기의 투구", slot: "투구", rarity: "희귀", img: "/public/용기의 투구.png", value: 110 },
-  { name: "검은 달의 투구", slot: "투구", rarity: "에픽", img: "/public/검은 달의 투구.png", value: 450 },
-  { name: "신왕의 면류관", slot: "투구", rarity: "전설", img: "/public/신왕의 면류관.png", value: 1400 },
-
-  { name: "낡은 철 갑옷", slot: "갑옷", rarity: "일반", img: "/public/낡은 철 갑옷.png", value: 80 },
-  { name: "기사단 정예 갑주", slot: "갑옷", rarity: "희귀", img: "/public/기사단 정예 갑주.png", value: 180 },
-  { name: "피의 결의 갑옷", slot: "갑옷", rarity: "에픽", img: "/public/피의 결의 갑옷.png", value: 390 },
-  { name: "황제의 황금 갑옷", slot: "갑옷", rarity: "전설", img: "/public/황제의 황금 갑옷.png", value: 1800 },
-
-  { name: "험난한 가죽 장갑", slot: "장갑", rarity: "일반", img: "/public/험난한 가죽 장갑.png", value: 20 },
-  { name: "철의 손아귀", slot: "장갑", rarity: "희귀", img: "/public/철의 손아귀.png", value: 100 },
-  { name: "불사의 손길", slot: "장갑", rarity: "에픽", img: "/public/불사의 손길.png", value: 390 },
-  { name: "왕의 건틀릿", slot: "장갑", rarity: "전설", img: "/public/왕의 건틀릿.png", value: 990 },
-
-  { name: "초보자 방패", slot: "방패", rarity: "일반", img: "/public/초보자 방패.png", value: 40 },
-  { name: "은빛 방패", slot: "방패", rarity: "희귀", img: "/public/은빛 방패.png", value: 80 },
-  { name: "성기사의 방패", slot: "방패", rarity: "에픽", img: "/public/성기사의 방패.png", value: 380 },
-  { name: "용살의 방패", slot: "방패", rarity: "전설", img: "/public/용살의 방패.png", value: 1200 },
-
-  { name: "해진 가죽 신발", slot: "신발", rarity: "일반", img: "/public/해진 가죽 신발.png", value: 30 },
-  { name: "기사단 군화", slot: "신발", rarity: "희귀", img: "/public/기사단 군화.png", value: 110 },
-  { name: "피의 각인 신발", slot: "신발", rarity: "에픽", img: "/public/피의 각인 신발.png", value: 320 },
-  { name: "신왕의 부츠", slot: "신발", rarity: "전설", img: "/public/신왕의 부츠.png", value: 770 },
-
-  // 쓸모없는 아이템 (상점에서만 판매)
-  { name: "의문의 빨간 포션", slot: null, rarity: "잡템", img: "/public/의문의포션.png", value: 10, useless: true },
-  { name: "이상한 돌멩이", slot: null, rarity: "잡템", img: "/public/이상한돌멩이.png", value: 7, useless: true },
-  { name: "쓸모없는 고철", slot: null, rarity: "잡템", img: "/public/고철.png", value: 13, useless: true },
+  { name: "무딘 칼", slot: "무기", rarity: "일반", img: "/무딘칼_일반.png", value: 50 },
+  { name: "파멸의 검", slot: "무기", rarity: "에픽", img: "/파멸의검_에픽.png", value: 500 },
+  { name: "루비소드", slot: "무기", rarity: "희귀", img: "/루비소드_희귀.png", value: 120 },
+  { name: "아스가르드의 빛", slot: "무기", rarity: "전설", img: "/아스가르드의빛_전설.png", value: 2000 },
+  { name: "녹슨 철 투구", slot: "투구", rarity: "일반", img: "/녹슨 철 투구.png", value: 40 },
+  { name: "용기의 투구", slot: "투구", rarity: "희귀", img: "/용기의 투구.png", value: 110 },
+  { name: "검은 달의 투구", slot: "투구", rarity: "에픽", img: "/검은 달의 투구.png", value: 450 },
+  { name: "신왕의 면류관", slot: "투구", rarity: "전설", img: "/신왕의 면류관.png", value: 1400 },
+  { name: "낡은 철 갑옷", slot: "갑옷", rarity: "일반", img: "/낡은 철 갑옷.png", value: 80 },
+  { name: "기사단 정예 갑주", slot: "갑옷", rarity: "희귀", img: "/기사단 정예 갑주.png", value: 180 },
+  { name: "피의 결의 갑옷", slot: "갑옷", rarity: "에픽", img: "/피의 결의 갑옷.png", value: 390 },
+  { name: "황제의 황금 갑옷", slot: "갑옷", rarity: "전설", img: "/황제의 황금 갑옷.png", value: 1800 },
+  { name: "험난한 가죽 장갑", slot: "장갑", rarity: "일반", img: "/험난한 가죽 장갑.png", value: 20 },
+  { name: "철의 손아귀", slot: "장갑", rarity: "희귀", img: "/철의 손아귀.png", value: 100 },
+  { name: "불사의 손길", slot: "장갑", rarity: "에픽", img: "/불사의 손길.png", value: 390 },
+  { name: "왕의 건틀릿", slot: "장갑", rarity: "전설", img: "/왕의 건틀릿.png", value: 990 },
+  { name: "초보자 방패", slot: "방패", rarity: "일반", img: "/초보자 방패.png", value: 40 },
+  { name: "은빛 방패", slot: "방패", rarity: "희귀", img: "/은빛 방패.png", value: 80 },
+  { name: "성기사의 방패", slot: "방패", rarity: "에픽", img: "/성기사의 방패.png", value: 380 },
+  { name: "용살의 방패", slot: "방패", rarity: "전설", img: "/용살의 방패.png", value: 1200 },
+  { name: "해진 가죽 신발", slot: "신발", rarity: "일반", img: "/해진 가죽 신발.png", value: 30 },
+  { name: "기사단 군화", slot: "신발", rarity: "희귀", img: "/기사단 군화.png", value: 110 },
+  { name: "피의 각인 신발", slot: "신발", rarity: "에픽", img: "/피의 각인 신발.png", value: 320 },
+  { name: "신왕의 부츠", slot: "신발", rarity: "전설", img: "/신왕의 부츠.png", value: 770 },
+  { name: "의문의 빨간 포션", slot: null, rarity: "잡템", img: "/의문의포션.png", value: 10, useless: true },
+  { name: "이상한 돌멩이", slot: null, rarity: "잡템", img: "/이상한돌멩이.png", value: 7, useless: true },
+  { name: "쓸모없는 고철", slot: null, rarity: "잡템", img: "/고철.png", value: 13, useless: true },
 ];
 
-// 기본 퀘스트 3개
+const SHOP_REWARDS = [
+  { name: "디저트 먹기", price: 200, img: "/dessert.png" },
+  { name: "유튜브 30분 시청", price: 300, img: "/youtube.png" },
+  { name: "카페 커피 한 잔", price: 500, img: "/coffee.png" },
+  { name: "하루 휴식권", price: 2000, img: "/rest.png" },
+];
+
 const BASE_QUESTS = [
   { text: "집 청소하기", difficulty: "보통", rewardXP: 20, rewardGold: 30 },
   { text: "미뤄둔 업무 처리", difficulty: "어려움", rewardXP: 40, rewardGold: 50 },
@@ -55,23 +50,18 @@ const BASE_QUESTS = [
 const randomGold = (item) => Math.floor(item.value * (0.8 + Math.random() * 0.4));
 
 export default function LifeRPG() {
-  // UI 상태
   const [tab, setTab] = useState("퀘스트");
-  // 유저 상태
   const [userId, setUserId] = useState("");
   const [login, setLogin] = useState(false);
-  // 게임 상태
   const [exp, setExp] = useState(0);
   const [gold, setGold] = useState(0);
   const [equipment, setEquipment] = useState({});
   const [inventory, setInventory] = useState([]);
-  // 퀘스트
   const [questText, setQuestText] = useState("");
   const [quests, setQuests] = useState(BASE_QUESTS);
-  // 상점
   const [shopMessage, setShopMessage] = useState("");
+  const [rewardMessage, setRewardMessage] = useState("");
 
-  // 로그인
   if (!login) {
     return (
       <div style={{
@@ -103,38 +93,33 @@ export default function LifeRPG() {
     );
   }
 
-  // 아이템 장착
+  // 장착/해제
   const equip = (item) => {
     if (!item.slot) return;
     setEquipment(e => ({ ...e, [item.slot]: item }));
     setInventory(inv => inv.filter(i => i !== item));
   };
-  // 해제
   const unequip = (slot) => {
     if (equipment[slot]) {
       setInventory(inv => [...inv, equipment[slot]]);
       setEquipment(e => ({ ...e, [slot]: undefined }));
     }
   };
-  // 퀘스트 완료 시 아이템 루팅
+
+  // 아이템 루팅
   function getRandomDrop() {
-    // 60% 확률로 아무것도 없음
     if (Math.random() < 0.6) return null;
-    // 30%: 잡템, 60%: 일반~에픽장비(희귀~에픽 30%, 일반 70%), 10%: 전설
     const roll = Math.random();
     if (roll < 0.3) {
-      // 잡템
       const useless = ALL_ITEMS.filter(x => x.useless);
       return useless[Math.floor(Math.random() * useless.length)];
     }
     if (roll < 0.9) {
-      // 일반~에픽
       const pool = ALL_ITEMS.filter(
         x =>
           x.slot &&
           ["일반", "희귀", "에픽"].includes(x.rarity)
       );
-      // 희귀,에픽은 확률 낮게
       let item;
       while (!item) {
         const i = pool[Math.floor(Math.random() * pool.length)];
@@ -144,16 +129,13 @@ export default function LifeRPG() {
       }
       return item;
     }
-    // 전설급 10%
     const legendary = ALL_ITEMS.filter(x => x.rarity === "전설");
     return legendary[Math.floor(Math.random() * legendary.length)];
   }
-  // 퀘스트 완료
   const completeQuest = (qidx) => {
     const q = quests[qidx];
     setExp(x => x + q.rewardXP);
     setGold(g => g + q.rewardGold);
-    // 아이템 드랍
     let msg = `경험치 +${q.rewardXP} 골드 +${q.rewardGold}`;
     const drop = getRandomDrop();
     if (drop) {
@@ -164,23 +146,31 @@ export default function LifeRPG() {
     setQuests(qs => qs.filter((_, i) => i !== qidx));
   };
 
-  // 인벤토리 더블클릭: 장착 or 해제 or 판매
+  // 인벤토리 더블클릭: 장착/판매
   const handleInventoryDoubleClick = (item) => {
     if (item.slot) {
-      // 장착
       equip(item);
     } else if (tab === "상점") {
-      // 상점에서만 쓸모없는 아이템 판매
       setInventory(inv => inv.filter(i => i !== item));
       setGold(g => g + randomGold(item));
       setShopMessage(`"${item.name}"를 판매했습니다!`);
     }
   };
 
-  // 상점: 쓸모없는 아이템만 판매가능
+  // 상점: 쓸모없는 아이템만 판매
   const uselessItems = inventory.filter(x => x.useless);
 
-  // 새 퀘스트 추가
+  // 상점 보상 구매
+  const buyReward = (r) => {
+    if (gold < r.price) {
+      setRewardMessage("골드가 부족합니다!");
+      return;
+    }
+    setGold(g => g - r.price);
+    setRewardMessage(`보상: ${r.name} 을(를) 구매했습니다!`);
+  };
+
+  // 퀘스트 추가
   const addQuest = () => {
     if (questText.trim()) {
       setQuests(qs => [
@@ -208,13 +198,9 @@ export default function LifeRPG() {
           <button style={{ fontSize: 18, background: tab === "상점" ? "#4d65f7" : "#333", color: "#fff", border: "none", borderRadius: 8, padding: "7px 18px", cursor: "pointer" }} onClick={() => setTab("상점")}>상점</button>
         </div>
       </div>
-
-      {/* 경험치/골드 표시 */}
       <div style={{ maxWidth: 900, margin: "0 auto", marginTop: 6, fontSize: 17, color: "#ffd23a", fontWeight: 600, marginBottom: 8 }}>
         경험치: {exp} | 골드: {gold}
       </div>
-
-      {/* 퀘스트 탭 */}
       {tab === "퀘스트" && (
         <div style={{
           background: "#292929", borderRadius: 20, maxWidth: 900, margin: "0 auto",
@@ -261,145 +247,131 @@ export default function LifeRPG() {
           </div>
         </div>
       )}
-
-      {/* 장비 탭 */}
       {tab === "장비" && (
         <div style={{
-          display: "flex", justifyContent: "center", alignItems: "center",
-          background: "#292929", borderRadius: 22, maxWidth: 900, margin: "0 auto",
-          marginTop: 18, padding: "32px 0 40px 0"
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "flex-start",
+          margin: "24px auto 0 auto",
+          background: "#292929",
+          borderRadius: 22,
+          padding: "32px 0",
+          maxWidth: 900,
+          minHeight: 480
         }}>
-          {/* 왼쪽: 무기, 투구, 갑옷 */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 24, alignItems: "flex-end" }}>
-            {LEFT_SLOTS.map((slot) => (
-              <div
-                key={slot}
-                style={{
-                  width: 68, height: 68, marginLeft: 14,
-                  background: "#232323", color: "#fff",
-                  border: "2px solid #333", borderRadius: 14,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 18, fontWeight: 600, cursor: "pointer"
-                }}
-                onDoubleClick={() => unequip(slot)}
-                title={equipment[slot]?.name || slot}
-              >
-                {equipment[slot] ? (
-                  <img src={equipment[slot].img} alt={slot} style={{ width: 38, height: 38 }} />
-                ) : slot}
+          {/* 왼쪽 슬롯 */}
+          <div style={{
+            display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "flex-end", marginRight: 12, gap: 25
+          }}>
+            {LEFT_SLOTS.map(slot => (
+              <div key={slot} style={{
+                width: 72, height: 72, border: "2px solid #555", borderRadius: 12, background: "#222",
+                display: "flex", alignItems: "center", justifyContent: "center", cursor: equipment[slot] ? "pointer" : "default"
+              }} onDoubleClick={() => unequip(slot)}>
+                {equipment[slot]
+                  ? <img src={equipment[slot].img} alt={slot} style={{ maxWidth: 56, maxHeight: 56 }} />
+                  : <span style={{ color: "#888" }}>{slot}</span>}
               </div>
             ))}
           </div>
-          {/* 중앙 실루엣 */}
+          {/* 실루엣 */}
           <div style={{
-            margin: "0 60px", display: "flex", flexDirection: "column", alignItems: "center"
+            width: 230, margin: "0 22px", display: "flex", justifyContent: "center", alignItems: "center"
           }}>
-            <div style={{
-              background: "#1c1c1c",
-              width: 180, height: 240, display: "flex", alignItems: "center", justifyContent: "center",
-              borderRadius: 22, boxShadow: "0 0 14px #0007"
-            }}>
-              <img src="/public/silhouette.png" style={{ width: 148, height: 210, opacity: 0.94 }} alt="실루엣" />
-            </div>
+            <img src="/silhouette.png" alt="실루엣" style={{ width: 180, filter: "brightness(0.8)" }} />
           </div>
-          {/* 오른쪽: 장갑, 방패, 신발 */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 24, alignItems: "flex-start" }}>
-            {RIGHT_SLOTS.map((slot) => (
-              <div
-                key={slot}
-                style={{
-                  width: 68, height: 68, marginRight: 14,
-                  background: "#232323", color: "#fff",
-                  border: "2px solid #333", borderRadius: 14,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 18, fontWeight: 600, cursor: "pointer"
-                }}
-                onDoubleClick={() => unequip(slot)}
-                title={equipment[slot]?.name || slot}
-              >
-                {equipment[slot] ? (
-                  <img src={equipment[slot].img} alt={slot} style={{ width: 38, height: 38 }} />
-                ) : slot}
+          {/* 오른쪽 슬롯 */}
+          <div style={{
+            display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "flex-start", marginLeft: 12, gap: 25
+          }}>
+            {RIGHT_SLOTS.map(slot => (
+              <div key={slot} style={{
+                width: 72, height: 72, border: "2px solid #555", borderRadius: 12, background: "#222",
+                display: "flex", alignItems: "center", justifyContent: "center", cursor: equipment[slot] ? "pointer" : "default"
+              }} onDoubleClick={() => unequip(slot)}>
+                {equipment[slot]
+                  ? <img src={equipment[slot].img} alt={slot} style={{ maxWidth: 56, maxHeight: 56 }} />
+                  : <span style={{ color: "#888" }}>{slot}</span>}
               </div>
             ))}
           </div>
         </div>
       )}
-
-      {/* 인벤토리 */}
-      <div style={{
-        maxWidth: 900, margin: "0 auto", marginTop: 24,
-        background: "#292929", borderRadius: 20, padding: "20px 34px 18px 34px"
-      }}>
-        <div style={{ fontWeight: 700, fontSize: 22, marginBottom: 10 }}>인벤토리</div>
-        <div style={{
-          display: "flex", flexWrap: "wrap", gap: 16, minHeight: 80,
-          alignItems: "flex-start"
-        }}>
-          {inventory.length === 0 && (
-            <div style={{ color: "#aaa", fontSize: 16, margin: "14px 0" }}>아이템이 없습니다.</div>
-          )}
-          {inventory.map((item, i) => (
-            <div key={i}
-              style={{
-                minWidth: 62, minHeight: 62, background: "#232323",
-                borderRadius: 12, border: "2px solid #444", color: "#fff",
-                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                fontSize: 15, fontWeight: 600, cursor: item.useless && tab === "상점" ? "pointer" : (item.slot ? "pointer" : "default"),
-                padding: 7
-              }}
-              title={item.name + (item.slot ? " (" + item.rarity + ")" : "")}
-              onDoubleClick={() => handleInventoryDoubleClick(item)}
-            >
-              <img src={item.img} alt={item.name} style={{ width: 32, height: 32, marginBottom: 3 }} />
-              <div>
-                {item.name}
-                {item.slot && <span style={{ fontSize: 13, color: "#aaa", marginLeft: 2 }}> ({item.rarity})</span>}
-                {item.useless && <span style={{ fontSize: 12, color: "#ff8888", marginLeft: 2 }}> (잡템)</span>}
-              </div>
-            </div>
-          ))}
-        </div>
-        <div style={{
-          marginTop: 18, color: "#888", fontSize: 13, lineHeight: 1.6
-        }}>
-          - 인벤토리 아이템 더블클릭: 장착/판매<br />
-          - 장비 아이콘 더블클릭: 해제<br />
-          - 퀘스트 완료 시 낮은 확률로 아이템 루팅, 중복 없음
-        </div>
-      </div>
-
-      {/* 상점 탭 */}
-      {tab === "상점" && (
-        <div style={{
-          maxWidth: 900, margin: "0 auto", marginTop: 22,
-          background: "#292929", borderRadius: 20, padding: "30px 38px"
-        }}>
-          <div style={{ fontSize: 22, fontWeight: 700, marginBottom: 16 }}>상점 - 쓸모없는 아이템만 판매가능</div>
-          <div style={{ display: "flex", gap: 18, flexWrap: "wrap", alignItems: "center" }}>
-            {uselessItems.length === 0 ? (
-              <span style={{ color: "#aaa" }}>판매 가능한 아이템이 없습니다.</span>
-            ) : (
-              uselessItems.map((item, idx) => (
-                <div key={idx}
-                  style={{
-                    background: "#333", borderRadius: 11, padding: "8px 16px", marginBottom: 7,
-                    color: "#fff", fontWeight: 600, display: "flex", alignItems: "center", cursor: "pointer", border: "2px solid #666"
-                  }}
+      {tab === "장비" && (
+        <div style={{ maxWidth: 900, margin: "0 auto", marginTop: 18 }}>
+          <div style={{ fontWeight: 700, fontSize: 22, marginBottom: 9 }}>인벤토리</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, minHeight: 80, background: "#232323", borderRadius: 12, padding: 14 }}>
+            {inventory.length === 0
+              ? <div style={{ color: "#aaa", fontSize: 16, padding: "20px 0" }}>인벤토리가 비었습니다.</div>
+              : inventory.map((item, idx) => (
+                <div key={idx} title={item.name}
                   onDoubleClick={() => handleInventoryDoubleClick(item)}
-                  title="더블클릭시 판매"
-                >
-                  <img src={item.img} alt={item.name} style={{ width: 28, height: 28, marginRight: 8 }} />
-                  {item.name} <span style={{ fontSize: 14, color: "#ffd23a", marginLeft: 8 }}>{randomGold(item)}G</span>
+                  style={{
+                    border: "2px solid #555", borderRadius: 10, width: 56, height: 56,
+                    background: "#282828", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", position: "relative"
+                  }}>
+                  <img src={item.img} alt={item.name} style={{ maxWidth: 40, maxHeight: 40 }} />
+                  {item.rarity && (
+                    <span style={{
+                      position: "absolute", bottom: 3, right: 5, fontSize: 10, color: "#ffd23a", textShadow: "1px 1px 3px #000"
+                    }}>{item.rarity}</span>
+                  )}
                 </div>
               ))
+            }
+          </div>
+          <div style={{ color: "#999", fontSize: 14, marginTop: 10 }}>
+            - 인벤토리 아이템 더블클릭: 장착/판매<br />
+            - 장비 아이콘 더블클릭: 해제<br />
+            - 퀘스트 완료 시 낮은 확률로 아이템 루팅, 중복 없음
+          </div>
+        </div>
+      )}
+      {tab === "상점" && (
+        <div style={{
+          background: "#232323", borderRadius: 18, maxWidth: 900, margin: "0 auto",
+          marginTop: 18, padding: "34px 40px"
+        }}>
+          <div style={{ fontWeight: 700, fontSize: 22, marginBottom: 10 }}>상점</div>
+          <div style={{ fontSize: 16, marginBottom: 12 }}>쓸모없는 아이템만 판매할 수 있습니다.<br />
+            <span style={{ color: "#aaa", fontSize: 14 }}>(인벤토리의 잡템을 더블클릭!)</span>
+          </div>
+          {uselessItems.length === 0
+            ? <div style={{ color: "#888", fontSize: 15, margin: "20px 0 30px" }}>판매 가능한 쓸모없는 아이템이 없습니다.</div>
+            : (
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
+                {uselessItems.map((item, idx) => (
+                  <div key={idx}
+                    onDoubleClick={() => handleInventoryDoubleClick(item)}
+                    style={{
+                      border: "2px solid #a44", borderRadius: 10, width: 52, height: 52,
+                      background: "#282828", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", position: "relative"
+                    }}>
+                    <img src={item.img} alt={item.name} style={{ maxWidth: 34, maxHeight: 34 }} />
+                  </div>
+                ))}
+              </div>
             )}
+          {shopMessage && <div style={{ color: "#77c", marginBottom: 10 }}>{shopMessage}</div>}
+          {/* --- 보상 탭 --- */}
+          <div style={{ fontWeight: 600, fontSize: 18, marginTop: 30, marginBottom: 8 }}>보상 (골드로 구매)</div>
+          <div style={{ display: "flex", gap: 18, marginBottom: 14 }}>
+            {SHOP_REWARDS.map((reward, idx) => (
+              <div key={idx} style={{
+                background: "#393950", borderRadius: 14, padding: "10px 18px", textAlign: "center", minWidth: 98
+              }}>
+                <img src={reward.img} alt={reward.name} style={{ maxWidth: 32, marginBottom: 6 }} />
+                <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>{reward.name}</div>
+                <div style={{ color: "#ffd23a", fontSize: 14, marginBottom: 6 }}>💰 {reward.price} G</div>
+                <button
+                  onClick={() => buyReward(reward)}
+                  style={{ fontSize: 14, borderRadius: 8, padding: "2px 14px", border: "none", background: "#4d65f7", color: "#fff", fontWeight: 700, cursor: "pointer" }}>
+                  구매
+                </button>
+              </div>
+            ))}
           </div>
-          {shopMessage && <div style={{ marginTop: 16, color: "#57ffa1" }}>{shopMessage}</div>}
-          <div style={{ color: "#aaa", marginTop: 18, fontSize: 14 }}>
-            * 쓸모없는 아이템은 <b>상점탭에서만</b> 판매할 수 있습니다.<br />
-            * 장비/소모품은 판매 불가 (추후 업데이트 가능)
-          </div>
+          {rewardMessage && <div style={{ color: "#98d957", marginTop: 8 }}>{rewardMessage}</div>}
         </div>
       )}
     </div>
