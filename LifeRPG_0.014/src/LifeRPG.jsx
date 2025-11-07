@@ -10,6 +10,7 @@ const EQUIP_SLOTS = [
   { key: "boots", label: "신발", position: "right" },
 ];
 
+// ⭐ 쓸모없는 아이템 추가!
 const ALL_ITEMS = [
   { key: "weapon", name: "무딘 칼", icon: "/무딘칼_일반.png", rarity: "일반" },
   { key: "weapon", name: "파멸의 검", icon: "/파멸의검_에픽.png", rarity: "에픽" },
@@ -20,14 +21,26 @@ const ALL_ITEMS = [
   { key: "shield", name: "기본 방패", icon: "/기본방패.png", rarity: "일반" },
   { key: "glove", name: "가죽장갑", icon: "/가죽장갑.png", rarity: "일반" },
   { key: "boots", name: "가죽신발", icon: "/가죽신발.png", rarity: "일반" },
+  // ----- 여기부터 쓸모없는(장착불가) 아이템 -----
+  { key: "junk", name: "쓴맛 포션", icon: "/쓴맛포션.png", rarity: "쓸모없음" },
+  { key: "junk", name: "깨진 유리병", icon: "/깨진유리병.png", rarity: "쓸모없음" },
+  { key: "junk", name: "의문의 돌멩이", icon: "/돌멩이.png", rarity: "쓸모없음" },
+  { key: "junk", name: "바람 빠진 풍선", icon: "/풍선.png", rarity: "쓸모없음" },
+  { key: "junk", name: "녹슨 못", icon: "/녹슨못.png", rarity: "쓸모없음" },
 ];
 
+// 드랍 확률 표 (쓸모없는 것도 드랍)
 const LOOT_TABLE = [
-  { rarity: "전설", chance: 5 },
-  { rarity: "에픽", chance: 10 },
-  { rarity: "희귀", chance: 15 },
-  { rarity: "일반", chance: 70 },
+  { rarity: "전설", chance: 4 },
+  { rarity: "에픽", chance: 8 },
+  { rarity: "희귀", chance: 13 },
+  { rarity: "일반", chance: 40 },
+  { rarity: "쓸모없음", chance: 35 },
 ];
+
+const RARITY_SELL_PRICE = {
+  "전설": 50, "에픽": 16, "희귀": 6, "일반": 2, "쓸모없음": 1,
+};
 
 const DEFAULT_QUESTS = [
   { id: 1, text: "집 청소하기", reward: { xp: 10, gold: 5 } },
@@ -42,8 +55,9 @@ const SHOP_ITEMS = [
   { name: "운동 보상", price: 25, description: "자기관리 보상!", emoji: "🏋️" },
 ];
 
+// 드랍 함수
 function getRandomLoot() {
-  if (Math.random() > 0.3) return null;
+  if (Math.random() > 0.35) return null;
   const roll = Math.random() * 100;
   let acc = 0, chosen = "일반";
   for (let l of LOOT_TABLE) {
@@ -162,8 +176,7 @@ function RPGGame({ userId, onLogout }) {
   const [equipment, setEquipment] = useState({
     weapon: null, helmet: null, armor: null, shield: null, glove: null, boots: null,
   });
-  // ⭐ 여기가 다릅니다! 인벤토리 기본값을 []로!
-  const [inventory, setInventory] = useState([]);
+  const [inventory, setInventory] = useState([]); // 빈 인벤토리로 시작
   const [quests, setQuests] = useState([...DEFAULT_QUESTS]);
   const [questInput, setQuestInput] = useState("");
   const [xp, setXP] = useState(0);
@@ -171,8 +184,13 @@ function RPGGame({ userId, onLogout }) {
   const [message, setMessage] = useState("");
   const [activeTab, setActiveTab] = useState("quest");
 
-  // 인벤토리 더블클릭 → 장착
+  // 인벤토리 더블클릭 → 장착, 쓸모없는 아이템은 경고
   const handleInventoryDoubleClick = item => {
+    if (item.key === "junk") {
+      setMessage("이 아이템은 아무 쓸모가 없습니다...");
+      setTimeout(() => setMessage(""), 1200);
+      return;
+    }
     setEquipment(prev => ({
       ...prev, [item.key]: item,
     }));
@@ -183,6 +201,14 @@ function RPGGame({ userId, onLogout }) {
     if (!equipment[slotKey]) return;
     setInventory(inv => [...inv, equipment[slotKey]]);
     setEquipment(prev => ({ ...prev, [slotKey]: null }));
+  };
+
+  // 인벤토리 아이템 판매
+  const handleSellItem = item => {
+    setInventory(inv => inv.filter(i => i !== item));
+    setGold(g => g + (RARITY_SELL_PRICE[item.rarity] || 1));
+    setMessage(`${item.name}을(를) 판매했습니다! +${RARITY_SELL_PRICE[item.rarity] || 1}G`);
+    setTimeout(() => setMessage(""), 1500);
   };
 
   // 퀘스트 추가
@@ -250,7 +276,6 @@ function RPGGame({ userId, onLogout }) {
     }
   };
 
-  // 자동 저장 (선택)
   useEffect(() => {
     if (!userId) return;
     const interval = setInterval(handleSave, 60000);
@@ -271,53 +296,4 @@ function RPGGame({ userId, onLogout }) {
       <div style={{ display: "flex", alignItems: "flex-start", gap: 32 }}>
         <CharacterPanel equipment={equipment} onIconDoubleClick={handleEquipDoubleClick} />
         <div style={{ flex: 1 }}>
-          <div style={{ marginBottom: 8 }}>
-            <b>경험치:</b> {xp} | <b>골드:</b> {gold}
-            <button onClick={() => setActiveTab("quest")} style={{ marginLeft: 20, marginRight: 4, background: activeTab === "quest" ? "#555" : "#333", color: "#fff" }}>퀘스트</button>
-            <button onClick={() => setActiveTab("shop")} style={{ background: activeTab === "shop" ? "#555" : "#333", color: "#fff" }}>상점</button>
-          </div>
-          {activeTab === "quest" && (
-            <>
-              <div style={{ marginBottom: 12 }}>
-                <h2>퀘스트</h2>
-                <ul style={{ padding: 0, listStyle: "none" }}>
-                  {quests.map(q => (
-                    <li key={q.id}
-                      style={{ marginBottom: 4, display: "flex", alignItems: "center", gap: 8 }}>
-                      <span>{q.text}</span>
-                      <span style={{ fontSize: 13, color: "#ffd" }}>
-                        (보상: XP +{q.reward.xp}, Gold +{q.reward.gold})
-                      </span>
-                      <button onClick={() => handleQuestComplete(q)} style={{ marginLeft: 10 }}>완료</button>
-                    </li>
-                  ))}
-                </ul>
-                <input
-                  value={questInput}
-                  onChange={e => setQuestInput(e.target.value)}
-                  placeholder="퀘스트 내용 입력"
-                  style={{ width: 180, marginRight: 4 }}
-                  onKeyDown={e => e.key === "Enter" && handleQuestAdd()}
-                />
-                <button onClick={handleQuestAdd}>추가</button>
-              </div>
-              <h2>인벤토리</h2>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                {inventory.map(item => (
-                  <div key={item.name + item.rarity}
-                    onDoubleClick={() => handleInventoryDoubleClick(item)}
-                    style={{
-                      width: 56, height: 56, background: "#333c",
-                      border: `2px solid ${item.rarity === "전설" ? "#FFD700" : item.rarity === "에픽" ? "#c0f" : item.rarity === "희귀" ? "#08f" : "#555"}`,
-                      borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer"
-                    }}>
-                    <img src={item.icon} alt={item.name} style={{ width: 48, height: 48 }} />
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-          {activeTab === "shop" && (
-            <div>
-              <h2>상점</h2>
-              <div style={{ display: "flex", gap: 16, flexWrap:
+          <div style={{ marginBottom: 
