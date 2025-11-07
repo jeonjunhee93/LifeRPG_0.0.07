@@ -162,9 +162,8 @@ function RPGGame({ userId, onLogout }) {
   const [equipment, setEquipment] = useState({
     weapon: null, helmet: null, armor: null, shield: null, glove: null, boots: null,
   });
-  const [inventory, setInventory] = useState([
-    ALL_ITEMS[0], ALL_ITEMS[2], ALL_ITEMS[4], ALL_ITEMS[6], ALL_ITEMS[7], ALL_ITEMS[8]
-  ]);
+  // ⭐ 여기가 다릅니다! 인벤토리 기본값을 []로!
+  const [inventory, setInventory] = useState([]);
   const [quests, setQuests] = useState([...DEFAULT_QUESTS]);
   const [questInput, setQuestInput] = useState("");
   const [xp, setXP] = useState(0);
@@ -321,43 +320,4 @@ function RPGGame({ userId, onLogout }) {
           {activeTab === "shop" && (
             <div>
               <h2>상점</h2>
-              <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-                {SHOP_ITEMS.map(item => (
-                  <div key={item.name} style={{
-                    background: "#444a", padding: 16, borderRadius: 12,
-                    width: 150, textAlign: "center", border: "2px solid #555"
-                  }}>
-                    <div style={{ fontSize: 36 }}>{item.emoji}</div>
-                    <b>{item.name}</b>
-                    <div style={{ margin: "6px 0", fontSize: 13, color: "#ccc" }}>{item.description}</div>
-                    <div style={{ marginBottom: 8, color: "#ffe600" }}>💰 {item.price}G</div>
-                    <button onClick={() => handleBuy(item)}
-                      style={{ width: "90%", padding: 4, background: "#006eff", color: "#fff", border: "none", borderRadius: 8 }}>
-                      구매
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-      <div style={{ marginTop: 18, color: "#fc0", fontSize: 16, minHeight: 24 }}>{message}</div>
-      <div style={{ marginTop: 8, color: "#bbb", fontSize: 13 }}>
-        - 인벤토리 아이템 더블클릭: 장착<br />
-        - 장비 아이콘 더블클릭: 해제<br />
-        - 퀘스트 완료 시 낮은 확률로 아이템 루팅<br />
-        - 상점에서 골드로 다양한 보상 구매 가능<br />
-        - 저장/불러오기 시 아이디는 꼭 입력!<br />
-      </div>
-    </div>
-  );
-}
-
-// --- 최상위 App (로그인/게임 화면 전환) ---
-export default function LifeRPG() {
-  const [userId, setUserId] = useState("");
-  return userId
-    ? <RPGGame userId={userId} onLogout={() => setUserId("")} />
-    : <LoginScreen onLogin={setUserId} />;
-}
+              <div style={{ display: "flex", gap: 16, flexWrap:
