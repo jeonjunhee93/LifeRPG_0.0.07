@@ -38,6 +38,7 @@ const DEFAULT_QUESTS = [
 
 const BLANK_EQUIPMENT = EQUIP_TYPES.reduce((acc, e) => ({ ...acc, [e.key]: null }), {});
 const INV_SIZE = 12;
+
 function weightedRandomItem(table) {
   const total = table.reduce((sum, i) => sum + i.weight, 0);
   let n = Math.random() * total;
@@ -47,6 +48,7 @@ function weightedRandomItem(table) {
   }
   return table[0];
 }
+
 const LOCAL_KEY = "liferpg_save";
 
 export default function LifeRPG() {
@@ -58,7 +60,7 @@ export default function LifeRPG() {
   const [inventory, setInventory] = useState(Array(INV_SIZE).fill(null));
   const [quests, setQuests] = useState([...DEFAULT_QUESTS]);
   const [questInput, setQuestInput] = useState("");
-  const [shopTab, setShopTab] = useState("sell"); // "sell" or "reward"
+  const [shopTab, setShopTab] = useState("sell");
   const [log, setLog] = useState([]);
 
   useEffect(() => {
@@ -84,12 +86,14 @@ export default function LifeRPG() {
     setSavedUser(userId);
     setLog(["로그인 성공!"]);
   }
+
   function addQuest() {
     if (questInput.trim()) {
       setQuests([...quests, { text: questInput, reward: { xp: 10, gold: 5 } }]);
       setQuestInput("");
     }
   }
+
   function completeQuest(idx) {
     const { xp: rx, gold: rg } = quests[idx].reward;
     setXP(xp + rx); setGold(gold + rg);
@@ -107,6 +111,7 @@ export default function LifeRPG() {
     setLog([`퀘스트 완료: ${quests[idx].text} (경험치 +${rx}, 골드 +${rg})`, dropMsg]);
     setQuests(quests.filter((_, i) => i !== idx));
   }
+
   function handleInventoryDoubleClick(idx) {
     const item = inventory[idx];
     if (!item) return;
@@ -119,6 +124,7 @@ export default function LifeRPG() {
     }
     const slot = EQUIP_TYPES.find(e => e.key === item.type);
     if (slot) {
+      // 장착(덮어쓰기), 인벤토리->장비
       const newEquip = { ...equipment, [slot.key]: item };
       setEquipment(newEquip);
       const newInv = [...inventory]; newInv[idx] = null;
@@ -126,6 +132,7 @@ export default function LifeRPG() {
       setLog([`${item.name} 장착!`]);
     }
   }
+
   function handleEquipmentDoubleClick(type) {
     if (!equipment[type]) return;
     const idx = inventory.findIndex(i => !i);
@@ -137,6 +144,7 @@ export default function LifeRPG() {
     setInventory(newInv); setEquipment({ ...equipment, [type]: null });
     setLog([`${equipment[type].name} 해제!`]);
   }
+
   function handleShopSell(idx) {
     const item = inventory[idx];
     if (!item || item.type !== "junk") return;
@@ -145,6 +153,7 @@ export default function LifeRPG() {
     setInventory(newInv);
     setLog([`${item.name} 상점 판매! (골드+3)`]);
   }
+
   function handleBuyReward(idx) {
     const item = REWARD_SHOP[idx];
     if (gold < item.price) {
@@ -155,7 +164,7 @@ export default function LifeRPG() {
     setLog([`${item.name} 구매 성공! (${item.desc})`]);
   }
 
-  // 장비 위치: 왼쪽 3개(위: 무기, 투구, 갑옷), 오른쪽 3개(위: 장갑, 방패, 신발)
+  // 6칸 장비 위치: 왼쪽(무기/투구/갑옷), 오른쪽(장갑/방패/신발)
   const equipPositions = [
     { left: -70, top: 10 }, { left: -70, top: 70 }, { left: -70, top: 130 },
     { left: 210, top: 10 }, { left: 210, top: 70 }, { left: 210, top: 130 }
@@ -181,9 +190,10 @@ export default function LifeRPG() {
   return (
     <div style={{ minHeight: "100vh", background: "#222", color: "#fff", fontFamily: "Pretendard, sans-serif" }}>
       <div style={{ display: "flex", gap: 40, padding: 40, maxWidth: 1100, margin: "0 auto" }}>
+        {/* 장비창 */}
         <div style={{ flex: "0 0 340px", background: "#292929", borderRadius: 16, padding: 24, boxShadow: "0 2px 16px #0002" }}>
           <h2 style={{ textAlign: "center" }}>장비</h2>
-          <div style={{ position: "relative", width: 140 + 140, height: 230, margin: "24px auto" }}>
+          <div style={{ position: "relative", width: 280, height: 230, margin: "24px auto" }}>
             <img src="/silhouette.png" alt="캐릭터" style={{ position: "absolute", left: 70, width: 140, height: 230, zIndex: 0, opacity: 0.97 }} />
             {EQUIP_TYPES.map((slot, idx) => (
               <div
@@ -206,6 +216,7 @@ export default function LifeRPG() {
           </div>
           <div style={{ marginTop: 24, fontSize: 18 }}>경험치: {xp} | 골드: {gold}</div>
         </div>
+        {/* 인벤토리/퀘스트/상점 */}
         <div style={{ flex: 1 }}>
           <h2>
             <button
@@ -271,7 +282,7 @@ export default function LifeRPG() {
               ))}
             </div>
           )}
-          {/* 인벤토리/퀘스트/로그 기존 화면 */}
+          {/* 인벤토리, 퀘스트, 로그는 판매 탭에서만 노출 */}
           {shopTab === "sell" && (
             <>
               <h3>퀘스트</h3>
@@ -311,6 +322,7 @@ export default function LifeRPG() {
               </div>
             </>
           )}
+          {/* 보상 탭에서는 로그만 출력 */}
           {shopTab === "reward" && (
             <div style={{ marginTop: 24, fontSize: 13, color: "#aaa", minHeight: 40 }}>
               {log.map((l, i) => <div key={i}>{l}</div>)}
